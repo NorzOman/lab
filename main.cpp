@@ -3,11 +3,12 @@
 #include <crow/http_request.h>
 #include <crow/http_response.h>
 #include <crow/json.h>
+#include <crow/mustache.h>
 #include <iostream>
 #include <crow.h>
 
 #include "studentHandler/student.h"
-#include "testHandler/test.h"
+#include "middlware/middleware.h"
 
 int main(){
     // -- create the classroom object --
@@ -15,7 +16,20 @@ int main(){
 
     classroom c;
 
-    crow::SimpleApp app;
+    crow::App<labMiddleware> app;
+
+    crow::mustache::set_base("templates");
+
+    // -- templates --
+    CROW_ROUTE(app,"/")([](){
+        crow::mustache::context ctx;
+        return crow::mustache::load("index.html").render(ctx);
+    });
+
+    CROW_ROUTE(app,"/style.css")([](){
+        crow::mustache::context ctx;
+        return crow::mustache::load("style.css").render(ctx);
+    });
 
     // -- creates a empty classroom --
     // {
@@ -44,6 +58,7 @@ int main(){
     //         "optedSubjects": ["Chemistry", "Biology"]
     //     }
     // ]
+
     CROW_ROUTE(app,"/api/add-students")([&c](const crow::request& req){
         auto body = crow::json::load(req.body);
         // json array of strings
